@@ -20,6 +20,12 @@ constexpr unsigned int SOLENOID_DATA_PIN = 25;
 constexpr unsigned int LAUNCHER_VERTICAL_PIN = 23;
 constexpr unsigned int LED_FOR_LAUNCHER_VERTICAL = 2;
 
+constexpr unsigned int RES_PRESSURE_LED_START = 3;
+constexpr unsigned int RES_PRESSURE_LED_COUNT = 4;
+constexpr unsigned int RES_PRESSURE_LED_MAX_VALUE = 100;
 
+constexpr unsigned int ROCKET_PRESSURE_LED_START = 7;
+constexpr unsigned int ROCKET_PRESSURE_LED_COUNT = 4;
+constexpr unsigned int ROCKET_PRESSURE_LED_MAX_VALUE = 100;
 
 #endif //CONFIG_HPP

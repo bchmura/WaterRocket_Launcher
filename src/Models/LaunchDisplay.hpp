@@ -27,7 +27,14 @@ class LaunchDisplay
         void SetupLights();
         void SetupOled();
         void modeInitialization();
+
+        static int ConvertPressureToLedIndicators(int resevoir_pressure_psi, unsigned int res_pressure_led_max_value, unsigned int res_pressure_led_count);
+
         void modeRunTime();
+
+        static int SetLedGauge(int current_pressure_psi, unsigned int pressure_max_value, unsigned int led_start,
+                               unsigned int led_count);
+
         void modeErrorScreen();
         void RunUpdate();
         bool RunUpdate(ApplicationState newAppState);

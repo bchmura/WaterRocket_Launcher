@@ -76,6 +76,16 @@ void loopCheckSensors() {
         appState.isLauncherVertical = false;
         appState.isDirty = true;
     }
+
+    if (appState.isDirty) {
+        unsigned int rnd = 0;
+        rnd = rand() % 100;
+        Log.errorln("fake res pressure set to %d", rnd);
+        appState.resevoirPressurePsi = rand() % RES_PRESSURE_LED_MAX_VALUE;
+        rnd = rand() % 100;
+        Log.errorln("fake rocket pressure set to %d", rnd);
+        appState.rocketPressurePsi = rand() % ROCKET_PRESSURE_LED_MAX_VALUE;
+    }
 };
 
 

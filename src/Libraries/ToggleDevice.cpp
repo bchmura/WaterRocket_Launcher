@@ -16,11 +16,8 @@ void ToggleDevice::setup(int _pinNumber, State startingState) {
 
 void ToggleDevice::setState(State newState)
 {
-
- // digitalWrite(pinNumber,HIGH);
   Log.infoln("device set state requested: %d on pin %d", newState, pinNumber);
-  //if (newState == currentState) return;
-
+  if (newState == currentState) return;
   digitalWrite(pinNumber, newState);
   currentState = newState;
   Log.infoln("device set to: %d", currentState);

@@ -44,7 +44,7 @@ void LaunchDisplay::SetupLights() {
       delay(50);
     }
 
-    for(int i = LED_TOTAL_LEDS; i > 0; i--) {
+    for(int i = LED_TOTAL_LEDS - 1; i > -1; i--) {
       leds[i] = CRGB::Green;
       FastLED.show(); 
       delay(50);
@@ -120,14 +120,11 @@ void LaunchDisplay::modeRunTime(void) {
     display.setTextWrap(false);
     display.setTextColor(WHITE);
     display.setCursor(2, 4);
-    display.print("CURRENT_STATE");
+    display.print("Running...");
     
     display.setCursor(2, 18);display.print("Res:");
-    
     display.setCursor(2, 28);display.print("Tube:");
-    
     display.setCursor(2, 38);display.print("Sol:");
-    
     display.setCursor(2, 49);display.print("Botl:");
     
     cx = snprintf(line, 20, "%d/%d",lastAppState.resevoirPressurePsi, lastAppState.resevoirPressureVoltage);
@@ -170,8 +167,6 @@ void LaunchDisplay::modeRunTime(void) {
     
     display.display();
 
-  if (! lastAppState.isDirty) { return; };
-
   if (lastAppState.isSolendoidOpen) {
     leds[LED_FOR_SOLENOID_OPEN] = CRGB::Green;
   } else {
@@ -184,7 +179,38 @@ void LaunchDisplay::modeRunTime(void) {
     leds[LED_FOR_LAUNCHER_VERTICAL] = CRGB::Red;
   }
 
+  SetLedGauge(lastAppState.resevoirPressurePsi, RES_PRESSURE_LED_MAX_VALUE, RES_PRESSURE_LED_START, RES_PRESSURE_LED_COUNT);
+
+  SetLedGauge(lastAppState.rocketPressurePsi, ROCKET_PRESSURE_LED_MAX_VALUE, ROCKET_PRESSURE_LED_START, ROCKET_PRESSURE_LED_COUNT);
+
   FastLED.show();
 
   lastAppState.isDirty = false;
+}
+
+
+int LaunchDisplay::SetLedGauge(int current_pressure_psi, unsigned int pressure_max_value, unsigned int led_start, unsigned int led_count) {
+
+  double levelSize = pressure_max_value / led_count;
+
+  int numberOfLedsToLight = (int)(current_pressure_psi / levelSize + 0.5);
+
+  Log.infoln("Turning on %d out of %d LEDs due to pressure at %d out of %d (Level is %D)", numberOfLedsToLight, led_count, current_pressure_psi, pressure_max_value, levelSize);
+
+  for (int i = led_start; i < led_start + led_count; i++) {
+    if (i < numberOfLedsToLight + led_start) {
+      leds[i] = CRGB::HotPink;
+    } else {
+      leds[i] = CRGB::Black;
+    }
+  }
+
+  return numberOfLedsToLight;
+
+}
+
+
+int LaunchDisplay::ConvertPressureToLedIndicators(int res_pressure_psi, unsigned int res_pressure_led_max_value, unsigned int res_pressure_led_count) {
+  double levelSize = res_pressure_led_max_value / res_pressure_led_count;
+  return (int)(res_pressure_psi / levelSize + 0.5);
 }
