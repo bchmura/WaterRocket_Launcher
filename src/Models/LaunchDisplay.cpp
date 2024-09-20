@@ -44,6 +44,10 @@ void LaunchDisplay::SetupLights() {
       delay(50);
     }
 
+  delay(10000);
+
+
+
     for(int i = LED_TOTAL_LEDS - 1; i > -1; i--) {
       leds[i] = CRGB::Green;
       FastLED.show(); 

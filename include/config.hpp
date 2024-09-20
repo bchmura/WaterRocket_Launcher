@@ -1,6 +1,7 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
+
 constexpr unsigned int I2C_1_SDA = 21;
 constexpr unsigned int I2C_1_SDL = 22;
 
