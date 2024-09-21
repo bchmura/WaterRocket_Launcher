@@ -33,4 +33,14 @@ Sorry, the code is not intended to be highly configurable and you are sort of on
 
 
 
+## Wireless communications
+
+This happens over ESPNOW.  
+Basically, the base will:
+
+1. Accept commands that emulate the buttons over ESPNow.
+2. Respond to requests for status.
+3. Push current status and changes if polling requested.
+
+
 
