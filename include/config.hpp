@@ -15,6 +15,8 @@ constexpr unsigned int BUTTON_TOGGLE_SOLENOID = 32;
 constexpr unsigned int ACTUATOR_PIN1 = 5;
 constexpr unsigned int ACTUATOR_PIN2 = 17;
 
+constexpr unsigned int PRESSURE_SENSOR_1 = 34;
+constexpr unsigned int PRESSURE_SENSOR_2 = 35;
 
 constexpr unsigned int LED_DATA_PIN = 19;
 constexpr unsigned int LED_TOTAL_LEDS = 12;

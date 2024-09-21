@@ -11,7 +11,7 @@
 #include <Models/LaunchDisplay.hpp>
 #include <Models/ApplicationState.hpp>
 #include <Secrets/SecretConfig.hpp>
-
+#include <communications.hpp>
 
 //#define LOG_LEVEL_SILENT  0
 //#define LOG_LEVEL_FATAL   1
@@ -34,6 +34,7 @@ void loopCheckSensors();
 void onRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len);
 void onSend(const uint8_t *mac_addr, esp_now_send_status_t status);
 void sendMsg();
+void setupActuatorControl();
 
 ApplicationState appState;
 Bounce2::Button bouncePressurizeButton = Bounce2::Button();
@@ -41,6 +42,9 @@ Bounce2::Button bounceVerticalSwitch = Bounce2::Button();
 Bounce2::Button bounceLaunchButton = Bounce2::Button();
 LaunchDisplay myDisplay;
 ToggleDevice solenoidControl;
+
+L298N actuator(ACTUATOR_PIN1, ACTUATOR_PIN2);
+
 
 void setup() {
     Serial.begin(9600);
@@ -52,9 +56,10 @@ void setup() {
     setupEspNow();
     setupButtonsAndSwitches();
     setupSolenoidControl();
+    setupActuatorControl();
     myDisplay.Setup();
     taskManager.schedule(repeatMillis(1000), taskUpdateDisplay);
-    taskManager.schedule(repeatMillis(250), taskUpdateMeasurements);
+    taskManager.schedule(repeatMillis(1000), taskUpdateMeasurements);
     Log.infoln("main setup complete");
 }
 
@@ -112,20 +117,30 @@ void loopCheckSensors() {
         appState.isDirty = true;
     }
 
-    if (appState.isDirty) {
-        unsigned int rnd = 0;
-        rnd = rand() % 100;
-        Log.errorln("fake res pressure set to %d", rnd);
-        appState.resevoirPressurePsi = rand() % RES_PRESSURE_LED_MAX_VALUE;
-        rnd = rand() % 100;
-        Log.errorln("fake rocket pressure set to %d", rnd);
-        appState.rocketPressurePsi = rand() % ROCKET_PRESSURE_LED_MAX_VALUE;
-    }
+    // if (appState.isDirty) {
+    //     unsigned int rnd = 0;
+    //     rnd = rand() % 100;
+    //     Log.errorln("fake res pressure set to %d", rnd);
+    //     appState.resevoirPressurePsi = rand() % RES_PRESSURE_LED_MAX_VALUE;
+    //     rnd = rand() % 100;
+    //     Log.errorln("fake rocket pressure set to %d", rnd);
+    //     appState.rocketPressurePsi = rand() % ROCKET_PRESSURE_LED_MAX_VALUE;
+    // }
 };
 
 
 
 // SETUP CODE /////////////////////////////////////
+
+void setupActuatorControl() {
+    Log.traceln("setting up actuator control");
+
+
+
+}
+
+
+
 
 void setupButtonsAndSwitches() {
     Log.traceln("setting up buttons and switches");
@@ -190,14 +205,29 @@ void taskUpdateDisplay() {
     //appState.isDirty = false;
 }
 
+int convertVoltageToPsi(int voltage) {
+    double psi = (static_cast<double>(voltage) / 4095) * 100;
+    return static_cast<int>(std::round(psi));
+}
+
+
 void taskUpdateMeasurements() {
-    //Log.infoln("taskUpdateMeasurements called");
-    // calls to pressure sensors
 
+    int ps1 = 0;
+    int ps2 = 0;
+    for(int x = 0; x < 10; x++) {
+        ps1 += analogRead(PRESSURE_SENSOR_1);
+        ps2 += analogRead(PRESSURE_SENSOR_2);
+    }
+    appState.resevoirPressureVoltage = static_cast<int>(std::round(ps1 / 10));
+    appState.rocketPressureVoltage = static_cast<int>(std::round(ps2 / 10));
 
+    appState.resevoirPressurePsi = convertVoltageToPsi(appState.resevoirPressureVoltage);
+    Log.infoln("Pressure 1 %d, %d", appState.resevoirPressureVoltage, appState.resevoirPressurePsi);
+    appState.rocketPressurePsi = convertVoltageToPsi(appState.rocketPressureVoltage);
+    Log.infoln("Pressure 2 %d, %d", appState.rocketPressureVoltage, appState.rocketPressurePsi);
 
-
-
+    appState.isDirty = true;
 }
 
 // Communications
@@ -206,6 +236,18 @@ void onSend(const uint8_t *mac_addr, esp_now_send_status_t status) {
     Serial.print("\r\nLast Packet Send Status:\t");
     Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
+
+void sendPingAck(uint8_t * str, unsigned int ping_id) {
+
+    Log.infoln("PingAck sending");
+    PingAck response;
+    response.pingId = ping_id;
+    uint8_t message[sizeof(response)];
+    memcpy(&message[0], &response, sizeof(response));
+    Log.infoln("PingAck created");
+    ESPNow.send_message(CONTROLLER_MAC, message, sizeof(message));
+    Log.infoln("PingAck sent");
+};
 
 void onRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
     char macStr[18];
@@ -223,6 +265,52 @@ void onRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
         Serial.printf("%x ", data[i]);
     }
     Serial.println("");
+
+    uint8_t type = data[0];
+    Log.infoln("Received Type: %X", type);
+
+    switch (type) {
+        case 0x1:
+            break;
+        case 0x2: {
+            Ping ping;
+            memcpy(&ping, &data[0], sizeof(ping));
+            Log.infoln("Ping received: %d", ping.pingId);
+            sendPingAck(reinterpret_cast<uint8_t *>(macStr), ping.pingId);
+            }
+            break;
+
+        case CmdToggleSolenoidType: {
+            CmdToggleSolenoid command;
+            memcpy(&command, &data[0], sizeof(command));
+            Log.infoln("Toggle solenoid recieved");
+            appState.isSolendoidOpen = solenoidControl.toggle();
+            appState.isDirty = true;
+             //Log.infoln("Rocket Pressure at %d", appState.rocketPressurePsi);
+            break;
+        }
+
+        case CmdToggleActuatorType: {
+            CmdToggleActuator command;
+            memcpy(&command, &data[0], sizeof(command));
+            Log.infoln("Toggle actuator recieved");
+            actuator.backward();
+            delay(1000);
+            appState.isSolendoidOpen = solenoidControl.setState(OFF);
+            //Log.infoln("Rocket Pressure at %d", appState.rocketPressurePsi);
+            break;
+        }
+
+
+
+
+
+
+    }
+
+
+
+
 }
 
 void sendMsg() {

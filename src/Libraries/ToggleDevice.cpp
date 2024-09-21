@@ -14,13 +14,14 @@ void ToggleDevice::setup(int _pinNumber, ToggleState startingState) {
 
 
 
-void ToggleDevice::setState(ToggleState newState)
+ToggleState ToggleDevice::setState(ToggleState newState)
 {
   Log.infoln("device set state requested: %d on pin %d", newState, pinNumber);
-  if (newState == currentState) return;
+  if (newState == currentState) return currentState;
   digitalWrite(pinNumber, newState);
   currentState = newState;
   Log.infoln("device set to: %d", currentState);
+  return currentState;
 };
 
 ToggleState ToggleDevice::getState()

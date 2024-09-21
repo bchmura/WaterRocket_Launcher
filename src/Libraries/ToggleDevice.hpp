@@ -18,7 +18,7 @@ private:
     int pinNumber = -1;
 
 public:
-    void setState(ToggleState newState);
+    ToggleState setState(ToggleState newState);
     void setup(int pinNumber, ToggleState startingState);
     ToggleState getState();
     ToggleState toggle();
