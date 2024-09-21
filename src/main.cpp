@@ -5,11 +5,13 @@
 #include <Wire.h>
 #include <WiFi.h>
 #include <TaskManagerIO.h>
+#include <L298N.h>
 #include <config.hpp>
 #include <Libraries/ToggleDevice.hpp>
 #include <Models/LaunchDisplay.hpp>
 #include <Models/ApplicationState.hpp>
 #include <Secrets/SecretConfig.hpp>
+
 
 //#define LOG_LEVEL_SILENT  0
 //#define LOG_LEVEL_FATAL   1
@@ -33,7 +35,6 @@ void onRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len);
 void onSend(const uint8_t *mac_addr, esp_now_send_status_t status);
 void sendMsg();
 
-
 ApplicationState appState;
 Bounce2::Button bouncePressurizeButton = Bounce2::Button();
 Bounce2::Button bounceVerticalSwitch = Bounce2::Button();
@@ -52,7 +53,7 @@ void setup() {
     setupButtonsAndSwitches();
     setupSolenoidControl();
     myDisplay.Setup();
-    taskManager.schedule(repeatMillis(250), taskUpdateDisplay);
+    taskManager.schedule(repeatMillis(1000), taskUpdateDisplay);
     taskManager.schedule(repeatMillis(250), taskUpdateMeasurements);
     Log.infoln("main setup complete");
 }
@@ -61,6 +62,14 @@ void loop() {
     loopCheckInputs();
     loopCheckSensors();
     taskManager.runLoop();
+
+    // ToggleState ts = ON;
+    // solenoidControl.setState(ts);
+    // delay(2000);
+    // ts = OFF;
+    // solenoidControl.setState(ts);
+    // delay(2000);
+
 }
 
 void sendStatusToController() {
@@ -79,13 +88,13 @@ void sendStatusToController() {
     }
 }
 
-
 // LOOP Code ///////////////////////////////////////////
 
 void loopCheckInputs() {
+    Log.traceln("loopCheckInputs");
     bouncePressurizeButton.update();
     if (bouncePressurizeButton.changed() && bouncePressurizeButton.pressed()) {
-        Log.infoln("pressure button was pressed");
+        Log.infoln("Pressure button was pressed");
         appState.isSolendoidOpen = solenoidControl.toggle();
         appState.isDirty = true;
     }
@@ -175,14 +184,20 @@ void setupSolenoidControl() {
 
 // TASKS ////////////
 void taskUpdateDisplay() {
-    Log.traceln("taskUpdateDisplay called");
+    //Log.infoln("taskUpdateDisplay called");
     sendStatusToController();
     appState.isDirty = myDisplay.RunUpdate(appState);
+    //appState.isDirty = false;
 }
 
 void taskUpdateMeasurements() {
-    Log.traceln("taskUpdateMeasurements called");
+    //Log.infoln("taskUpdateMeasurements called");
     // calls to pressure sensors
+
+
+
+
+
 }
 
 // Communications
@@ -191,7 +206,6 @@ void onSend(const uint8_t *mac_addr, esp_now_send_status_t status) {
     Serial.print("\r\nLast Packet Send Status:\t");
     Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
-
 
 void onRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
     char macStr[18];
@@ -214,3 +228,11 @@ void onRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
 void sendMsg() {
 
 }
+
+// void setSolenoidOpen(bool reqState) {
+//     if (reqState==appState.isSolendoidOpen) return;
+//     Log.infoln("Setting Solenoid to %u ", reqState);
+//     digitalWrite(SOLENOID_DATA_PIN, reqState);
+//     appState.isSolendoidOpen = reqState;
+//     appState.isDirty = true;
+// }

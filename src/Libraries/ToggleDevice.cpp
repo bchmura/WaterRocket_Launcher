@@ -4,7 +4,7 @@
 #include "ToggleDevice.hpp"
 
 
-void ToggleDevice::setup(int _pinNumber, State startingState) {
+void ToggleDevice::setup(int _pinNumber, ToggleState startingState) {
   Log.infoln("Device set for pin %d and state %d", _pinNumber, startingState);
   pinNumber = _pinNumber;
   pinMode(pinNumber, OUTPUT);
@@ -14,7 +14,7 @@ void ToggleDevice::setup(int _pinNumber, State startingState) {
 
 
 
-void ToggleDevice::setState(State newState)
+void ToggleDevice::setState(ToggleState newState)
 {
   Log.infoln("device set state requested: %d on pin %d", newState, pinNumber);
   if (newState == currentState) return;
@@ -23,12 +23,12 @@ void ToggleDevice::setState(State newState)
   Log.infoln("device set to: %d", currentState);
 };
 
-State ToggleDevice::getState()
+ToggleState ToggleDevice::getState()
 {
   return currentState;
 };
 
-State ToggleDevice::toggle() {
+ToggleState ToggleDevice::toggle() {
   Log.infoln("device toggle requested from current state of %d", currentState);
 
   if (currentState == ON) {

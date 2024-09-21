@@ -80,6 +80,7 @@ bool LaunchDisplay::RunUpdate(ApplicationState newAppState) {
     break;
   }
 
+  lastAppState.isDirty = false;
   return lastAppState.isDirty;
 
 }

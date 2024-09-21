@@ -7,21 +7,21 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
 
-enum State {
+enum ToggleState {
     OFF = 0,
     ON = 1
 };
 
 class ToggleDevice {
 private:
-    State currentState = OFF;
+    ToggleState currentState = OFF;
     int pinNumber = -1;
 
 public:
-    void setState(State newState);
-    void setup(int pinNumber, State startingState);
-    State getState();
-    State toggle();
+    void setState(ToggleState newState);
+    void setup(int pinNumber, ToggleState startingState);
+    ToggleState getState();
+    ToggleState toggle();
 };
 
 #endif //TOGGLEDEVICE_HPP
